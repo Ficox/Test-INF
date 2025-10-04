@@ -1,0 +1,15 @@
+
+name: test-api
+appName: test
+namespace: test-qa
+replicas: 1
+image: ghcr.io/ficox/test-api:qa-latest
+port: 8000
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+healthPath: "/health"
