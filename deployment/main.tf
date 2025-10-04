@@ -1,5 +1,5 @@
 resource "helm_release" "test_platform" {
-  name              = "test-platform"
+  name              = "test-platform-${terraform.workspace}"
   chart             = "${path.module}/../Test-Platform"
   values            = [file("${path.module}/../Test-Platform/${terraform.workspace}-values.yaml")]
   force_update      = true
@@ -8,7 +8,7 @@ resource "helm_release" "test_platform" {
 }
 
 resource "helm_release" "test_api" {
-  name         = "test-api"
+  name         = "test-api-${terraform.workspace}"
   namespace    = "test-${terraform.workspace}"
   chart        = "${path.module}/../Test-API"
   values       = [file("${path.module}/../Test-API/${terraform.workspace}-values.yaml")]
@@ -18,7 +18,7 @@ resource "helm_release" "test_api" {
 }
 
 resource "helm_release" "test_ui" {
-  name         = "test-ui"
+  name         = "test-ui-${terraform.workspace}"
   namespace    = "test-${terraform.workspace}"
   chart        = "${path.module}/../Test-UI"
   values       = [file("${path.module}/../Test-UI/${terraform.workspace}-values.yaml")]
