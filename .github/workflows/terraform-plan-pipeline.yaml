@@ -47,7 +47,7 @@ jobs:
           $root = Split-Path -Parent $env:GITHUB_WORKSPACE
           $root = Split-Path -Parent $root
           $src = Join-Path $root "test"
-          $dst = Join-Path $env:GITHUB_WORKSPACE "deployment\test"
+          $dst = Join-Path $env:GITHUB_WORKSPACE "deployment"
           if (-not (Test-Path $src)) { New-Item -ItemType Directory -Force -Path $src | Out-Null }
           New-Item -ItemType Directory -Force -Path $dst | Out-Null
           robocopy "$src" "$dst" /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1
