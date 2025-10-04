@@ -5,7 +5,7 @@ terraform {
     helm       = { source = "hashicorp/helm",       version = "~> 2.13" }
   }
   backend "local" {
-    path = "test/terraform.tfstate"
+    path = "../../test/terraform.tfstate"
   }  
 }
 
