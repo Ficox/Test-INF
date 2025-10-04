@@ -5,7 +5,7 @@ terraform {
     helm       = { source = "hashicorp/helm",       version = "~> 2.13" }
   }
   backend "local" {
-    path = "terraform.tfstate"
+    path = "C:\\Users\\Windows 10\\Test-INF\\terraform.tfstate"
   }  
 }
 
