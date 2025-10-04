@@ -2,7 +2,7 @@
 name: test-api
 appName: test
 namespace: test-dev
-replicas: 2
+replicas: 1
 image: ghcr.io/ficox/test-api:dev-latest
 port: 8000
 resources:
