@@ -55,7 +55,7 @@ jobs:
 
       - name: Terraform init
         working-directory: deployment
-        run: terraform init -no-color -input=false
+        run: terraform init -no-color -input=false -reconfigure
 
       - name: Ensure/select workspace (${{ env.ENV }})
         working-directory: deployment
