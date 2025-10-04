@@ -1,0 +1,72 @@
+name: terraform-apply-on-merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [dev, qa, uat, main]
+
+jobs:
+  apply:
+    if: github.event.pull_request.merged == true
+    runs-on: self-hosted
+
+    permissions:
+      contents: read
+      # id-token: write   # uncomment if you use OIDC to your cloud
+
+    concurrency:
+      group: tf-apply-${{ github.event.pull_request.base.ref }}
+      cancel-in-progress: false
+
+    env:
+      RAW_REF: ${{ github.event.pull_request.base.ref }}
+      ENV: ${{ github.event.pull_request.base.ref == 'main' && 'prod' || github.event.pull_request.base.ref }}
+      TF_IN_AUTOMATION: true
+      TF_INPUT: false
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout base branch after merge
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Debug refs
+        run: |
+          Write-Host "BASE REF (merged into) = ${{ github.event.pull_request.base.ref }}"
+          Write-Host "ENV (workspace)        = $env:ENV"
+
+      - name: Terraform init
+        working-directory: deployment
+        run: terraform init -no-color -input=false
+
+      - name: Ensure/select workspace (${{ env.ENV }})
+        working-directory: deployment
+        run: |
+          $ws = "$env:ENV" -replace '[^0-9A-Za-z_\-]', ''
+          if (-not $ws) { throw "Workspace computed to empty name." }
+          Write-Host "Using workspace: $ws"
+          terraform workspace select $ws
+          if ($LASTEXITCODE -ne 0) {
+            terraform workspace new $ws
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            terraform workspace select $ws
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Terraform validate
+        working-directory: deployment
+        run: terraform validate -no-color
+
+      - name: Terraform apply (auto-approve)
+        working-directory: deployment
+        run: terraform apply -auto-approve -lock-timeout=5m -no-color

@@ -1,0 +1,71 @@
+name: terraform-plan-on-pr
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [dev, qa, uat, main]
+
+jobs:
+  plan:
+    runs-on: self-hosted
+
+    permissions:
+      contents: read
+
+    concurrency:
+      group: tf-plan-${{ github.ref }}
+      cancel-in-progress: false
+
+    env:
+      RAW_REF: ${{ github.base_ref != '' && github.base_ref || github.ref_name }}
+      ENV: ${{ (github.base_ref != '' && github.base_ref || github.ref_name) == 'main' && 'prod' || (github.base_ref != '' && github.base_ref || github.ref_name) }}
+      TF_IN_AUTOMATION: true
+      TF_INPUT: false
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Debug refs
+        run: |
+          Write-Host "github.ref_name = ${{ github.ref_name }}"
+          Write-Host "github.base_ref = ${{ github.base_ref }}"
+          Write-Host "RAW_REF (target or ref) = $env:RAW_REF"
+          Write-Host "ENV (workspace) = $env:ENV"
+
+      - name: Terraform init
+        working-directory: deployment
+        run: terraform init -no-color -input=false
+
+      - name: Ensure/select workspace (${{ env.ENV }})
+        working-directory: deployment
+        run: |
+          $ws = "$env:ENV"
+          $ws = $ws -replace '[^0-9A-Za-z_\-]', ''
+          if (-not $ws) { throw "Workspace computed to empty name." }
+          Write-Host "Using workspace: $ws"
+          terraform workspace select $ws
+          if ($LASTEXITCODE -ne 0) {
+            terraform workspace new $ws
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            terraform workspace select $ws
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Terraform validate
+        working-directory: deployment
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        working-directory: deployment
+        run: terraform plan -no-color
+

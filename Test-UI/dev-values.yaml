@@ -1,0 +1,15 @@
+
+name: test-ui
+appName: test
+namespace: test-dev
+replicas: 2
+image: ghcr.io/ficox/test-ui:dev-latest
+port: 80
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+healthPath: "/"

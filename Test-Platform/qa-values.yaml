@@ -1,0 +1,23 @@
+namespace: test-qa
+
+ingress:
+  enabled: true
+  className: nginx
+
+  rules:
+    - host: test-ui-qa.local
+      path: /
+      service:
+        name: test-ui
+        port: 80
+
+    - host: test-api-qa.local
+      path: /
+      service:
+        name: test-api
+        port: 80
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteMany
+  size: 1Gi
