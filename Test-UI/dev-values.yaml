@@ -2,7 +2,7 @@
 name: test-ui
 appName: test
 namespace: test-dev
-replicas: 2
+replicas: 1
 image: ghcr.io/ficox/test-ui:dev-latest
 port: 80
 resources:
