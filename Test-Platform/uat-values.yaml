@@ -1,17 +1,17 @@
-namespace: test-qa
+namespace: test-uat
 appName: test
 ingress:
   enabled: true
   className: nginx
 
   rules:
-    - host: test-ui-qa.local
+    - host: test-ui-uat.local
       path: /
       service:
         name: test-ui
         port: 80
 
-    - host: test-api-qa.local
+    - host: test-api-uat.local
       path: /
       service:
         name: test-api
