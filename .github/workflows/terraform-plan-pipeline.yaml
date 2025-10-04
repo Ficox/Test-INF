@@ -53,14 +53,9 @@ jobs:
           robocopy "$src" "$dst" /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1
           if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE } else { exit 0 }
 
-      - name: Reset Terraform cache
-        working-directory: deployment
-        run: |
-          if (Test-Path ".terraform") { Remove-Item -Recurse -Force ".terraform" }
-
       - name: Terraform init
         working-directory: deployment
-        run: terraform init -no-color -input=false -reconfigure
+        run: terraform init -no-color -input=false
 
       - name: Ensure/select workspace (${{ env.ENV }})
         working-directory: deployment
