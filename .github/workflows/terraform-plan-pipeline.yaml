@@ -17,7 +17,6 @@ jobs:
       cancel-in-progress: false
 
     env:
-      ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
       TF_IN_AUTOMATION: true
       TF_INPUT: false
 
@@ -38,16 +37,29 @@ jobs:
         working-directory: deployment
         run: terraform init -no-color -input=false
 
-      - name: Ensure/select workspace (${{ env.ENV }})
+      - name: Ensure/select workspace
         working-directory: deployment
         run: |
-          $ws='${{ env.ENV }}'
+          $raw = "${{ github.ref_name }}"
+
+          if ($raw -eq "main") {
+            $ws = "prod"
+          }
+          else {
+            if ($raw -match "/") {
+              $ws = $raw.Split("/")[0]
+            }
+            else {
+              $ws = $raw
+            }
+          }
+
+          Write-Host "Using workspace: $ws"
+
           terraform workspace select $ws
           if ($LASTEXITCODE -ne 0) {
             terraform workspace new $ws
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             terraform workspace select $ws
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
       - name: Terraform validate
