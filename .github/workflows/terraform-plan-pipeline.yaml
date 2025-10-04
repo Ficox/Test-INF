@@ -1,0 +1,57 @@
+name: terraform-plan-on-pr
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [dev, qa, uat, main]
+
+jobs:
+  plan:
+    runs-on: self-hosted
+
+    permissions:
+      contents: read
+
+    concurrency:
+      group: tf-plan-${{ github.ref_name }}
+      cancel-in-progress: false
+
+    env:
+      ENV: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+      TF_IN_AUTOMATION: true
+      TF_INPUT: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform init
+        shell: pwsh
+        working-directory: deployment
+        run: terraform init -no-color -input=false
+
+      - name: Ensure/select workspace (${{ env.ENV }})
+        shell: pwsh
+        working-directory: deployment
+        run: |
+          $ws='${{ env.ENV }}'
+          terraform workspace select $ws 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            terraform workspace new $ws
+            terraform workspace select $ws
+          }
+
+      - name: Terraform validate
+        shell: pwsh
+        working-directory: deployment
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        shell: pwsh
+        working-directory: deployment
+        run: terraform plan -no-color
