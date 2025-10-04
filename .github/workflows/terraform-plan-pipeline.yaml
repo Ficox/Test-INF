@@ -21,6 +21,10 @@ jobs:
       TF_IN_AUTOMATION: true
       TF_INPUT: false
 
+    defaults:
+      run:
+        shell: powershell
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,27 +35,25 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform init
-        shell: pwsh
         working-directory: deployment
         run: terraform init -no-color -input=false
 
       - name: Ensure/select workspace (${{ env.ENV }})
-        shell: pwsh
         working-directory: deployment
         run: |
           $ws='${{ env.ENV }}'
-          terraform workspace select $ws 2>$null
+          terraform workspace select $ws
           if ($LASTEXITCODE -ne 0) {
             terraform workspace new $ws
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             terraform workspace select $ws
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
       - name: Terraform validate
-        shell: pwsh
         working-directory: deployment
         run: terraform validate -no-color
 
       - name: Terraform plan
-        shell: pwsh
         working-directory: deployment
         run: terraform plan -no-color
